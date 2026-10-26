@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KesitAl — Görsel Video Kesit Aracı</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body class="app-body">
+  <div class="app-layout">
+    <!-- Üst Başlık (macOS Minimal Bar) -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-icon">✂️</div>
+        <div class="brand-text">
+          <h1 class="brand-title">KesitAl</h1>
+          <span class="brand-subtitle">Görsel Video Kesit & İndirme Aracı</span>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="status-pill status-ready" id="serverStatusPill">
+          <span class="pulse-dot" id="serverStatusDot"></span> <span id="serverStatusText">Hazır</span>
+        </span>
+        <button type="button" id="shutdownServerBtn" class="btn btn-shutdown" title="Arka plan sunucusunu ve geçici dosyaları kapatır">
+          <span class="btn-shutdown-icon">⏻</span>
+          <span>Sunucuyu Kapat</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sunucu Kapatıldı Bilgi Bildirimi -->
+    <div id="shutdownBanner" class="shutdown-banner hidden" role="alert">
+      <div class="shutdown-banner-icon">⏻</div>
+      <div class="shutdown-banner-content">
+        <h3 class="shutdown-banner-title">Sunucu Kapatıldı</h3>
+        <p class="shutdown-banner-desc">Arka plan sunucusu ve geçici önizleme dosyaları tamamen kapatıldı. Bu sekmeyi güvenle kapatabilirsiniz.</p>
+      </div>
+    </div>
+
+    <main class="app-main">
+      <!-- ADIM 1: Video Bağlantı Çubuğu -->
+      <section class="card section-input" id="section-input">
+        <div class="step-header">
+          <span class="step-number">1</span>
+          <div class="step-title-wrap">
+            <h2 class="step-title">Video Bağlantısı</h2>
+            <p class="step-desc">YouTube veya doğrudan video bağlantısını yapıştırın.</p>
+          </div>
+        </div>
+
+        <form id="url-form" class="url-form" onsubmit="return false;">
+          <div class="url-input-wrapper">
+            <span class="input-prefix-icon">🔗</span>
+            <input 
+              type="url" 
+              id="video-url-input" 
+              class="url-input" 
+              placeholder="YouTube veya video bağlantısını buraya yapıştırın..." 
+              autocomplete="off" 
+              spellcheck="false"
+              required
+            >
+            <button type="button" id="btn-paste" class="btn btn-secondary btn-icon-text" title="Panodaki bağlantıyı yapıştır">
+              <span class="btn-icon">📋</span>
+              <span class="btn-label">Yapıştır</span>
+            </button>
+            <button type="submit" id="btn-inspect" class="btn btn-primary btn-icon-text">
+              <span class="btn-icon">🎬</span>
+              <span class="btn-label">Videoyu Yükle</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- Yükleme Durumu / İskelet Göstergesi -->
+        <div id="inspect-loading" class="inspect-loading-banner hidden">
+          <div class="spinner"></div>
+          <span class="loading-text">Video analiz ediliyor ve yükleniyor, lütfen bekleyin...</span>
+        </div>
+
+        <!-- Hata Bildirimi -->
+        <div id="inspect-error" class="error-banner hidden" role="alert">
+          <span class="error-icon">⚠️</span>
+          <span id="inspect-error-msg" class="error-text">Video yüklenirken bir sorun oluştu.</span>
+          <button type="button" class="btn-close-banner" id="btn-close-inspect-error" aria-label="Kapat">✕</button>
+        </div>
+      </section>
+
+      <!-- ADIM 2: Video Oynatıcı ve Görsel Sarı Kırpma Çubuğu -->
+      <section class="card section-workspace hidden" id="section-workspace">
+        <div class="step-header">
+          <span class="step-number">2</span>
+          <div class="step-title-wrap">
+            <h2 class="step-title">Kırpma Aralığını Seçin</h2>
+            <p class="step-desc">Sarı kolları kaydırarak istediğiniz başlangıç ve bitiş karesini canlı görün.</p>
+          </div>
+          <div class="video-meta-badge" id="video-meta-badge">
+            <span id="meta-platform-pill" class="badge badge-platform">YouTube</span>
+            <span id="meta-duration-pill" class="badge badge-duration">00:00</span>
+          </div>
+        </div>
+
+        <div class="video-info-strip">
+          <h3 id="video-title" class="video-current-title">Video Başlığı</h3>
+        </div>
+
+        <!-- Video Player Alanı -->
+        <div class="player-stage">
+          <div id="player-container" class="player-container">
+            <!-- Dinamik YouTube Iframe veya HTML5 Video buraya enjekte edilir -->
+          </div>
+        </div>
+
+        <!-- Görsel Çift Tutamaçlı Sarı Kırpma Çubuğu (QuickTime Trim Bar) -->
+        <div class="trimmer-block">
+          <div class="trimmer-header">
+            <span class="trimmer-title">⏱️ Canlı Kırpma Cetveli</span>
+            <span class="trimmer-hint">Tutamaçları sürüklerken video karesi anlık olarak değişir.</span>
+          </div>
+
+          <div id="timeline-mount" class="timeline-mount">
+            <!-- TimelineScrubber.js burayı doldurur -->
+          </div>
+
+          <!-- Pratik İnce Ayar Butonları ve Hızlı Eylemler -->
+          <div class="quick-controls-grid">
+            <!-- Sol: Başlangıç Ayarları -->
+            <div class="control-box control-box-start">
+              <span class="control-box-label">Başlangıç Zamanı</span>
+              <div class="time-adjust-row">
+                <button type="button" id="btn-start-minus" class="btn btn-pill-step" title="0.5 saniye geri al">-0.5s</button>
+                <input type="text" id="input-start-time" class="time-numeric-input" value="00:00.0" spellcheck="false">
+                <button type="button" id="btn-start-plus" class="btn btn-pill-step" title="0.5 saniye ileri al">+0.5s</button>
+              </div>
+              <button type="button" id="btn-set-start-here" class="btn btn-secondary btn-sm btn-mark-frame" title="Şu an ekrandaki kareyi başlangıç yap">
+                <span>[ Başlangıcı Şu Anki Kare Yap</span>
+              </button>
+            </div>
+
+            <!-- Orta: Önizleme Eylemleri -->
+            <div class="control-box control-box-center">
+              <div class="preview-actions">
+                <button type="button" id="btn-preview-clip" class="btn btn-accent btn-preview-main">
+                  <span class="btn-icon">▶</span>
+                  <span class="btn-label">Seçili Kesiti Oynat</span>
+                </button>
+                <label class="toggle-control" title="Kesit bitince başa sarıp tekrar oynatır">
+                  <input type="checkbox" id="chk-loop-clip" class="toggle-checkbox" checked>
+                  <span class="toggle-slider"></span>
+                  <span class="toggle-label">🔄 Döngüde Oynat</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Sağ: Bitiş Ayarları -->
+            <div class="control-box control-box-end">
+              <span class="control-box-label">Bitiş Zamanı</span>
+              <div class="time-adjust-row">
+                <button type="button" id="btn-end-minus" class="btn btn-pill-step" title="0.5 saniye geri al">-0.5s</button>
+                <input type="text" id="input-end-time" class="time-numeric-input" value="00:00.0" spellcheck="false">
+                <button type="button" id="btn-end-plus" class="btn btn-pill-step" title="0.5 saniye ileri al">+0.5s</button>
+              </div>
+              <button type="button" id="btn-set-end-here" class="btn btn-secondary btn-sm btn-mark-frame" title="Şu an ekrandaki kareyi bitiş yap">
+                <span>Bitişi Şu Anki Kare Yap ]</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADIM 3: İndirme Paneli ve Durum Çubuğu -->
+      <section class="card section-download hidden" id="section-download">
+        <div class="step-header">
+          <span class="step-number">3</span>
+          <div class="step-title-wrap">
+            <h2 class="step-title">Kesiti Dışa Aktar</h2>
+            <p class="step-desc">Seçtiğiniz aralık kayıpsız ve yüksek hızda MP4 formatında kaydedilir.</p>
+          </div>
+        </div>
+
+        <div class="download-summary-card">
+          <div class="summary-details">
+            <div class="summary-col">
+              <span class="summary-label">Seçilen Kesit Aralığı:</span>
+              <span id="summary-range-text" class="summary-value-bold">00:00.0 ➔ 00:00.0</span>
+            </div>
+            <div class="summary-col">
+              <span class="summary-label">Toplam Kesit Süresi:</span>
+              <span id="summary-duration-text" class="summary-badge-duration">0 saniye</span>
+            </div>
+          </div>
+
+          <div class="download-action-wrap">
+            <button type="button" id="btn-download-clip" class="btn btn-download-primary">
+              <span class="btn-icon">✂️</span>
+              <span class="btn-label">Seçili Kesiti MP4 Olarak İndir</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- İndirme İlerleme Durumu -->
+        <div id="download-progress-box" class="download-progress-box hidden">
+          <div class="progress-info-row">
+            <span id="progress-status-msg" class="progress-status-msg">İşlem başlatılıyor...</span>
+            <span id="progress-percent-text" class="progress-percent-text">%0</span>
+          </div>
+          <div class="progress-bar-track">
+            <div id="progress-bar-fill" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- İndirme Başarı Kartı -->
+        <div id="download-success-box" class="download-success-box hidden">
+          <div class="success-icon-wrap">✅</div>
+          <div class="success-content">
+            <h4 class="success-title">Kesit Başarıyla Kaydedildi!</h4>
+            <p id="success-filename" class="success-filename">video_kesit.mp4</p>
+          </div>
+          <div class="success-actions">
+            <button type="button" id="btn-reveal-finder" class="btn btn-finder">
+              <span class="btn-icon">📂</span>
+              <span class="btn-label">Finder'da Göster</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- İndirme Hata Kartı -->
+        <div id="download-error-box" class="download-error-box hidden" role="alert">
+          <span class="error-icon">❌</span>
+          <div class="error-content">
+            <h4 class="error-title">İndirme Başarısız Oldu</h4>
+            <p id="download-error-msg" class="error-text">Bir hata meydana geldi.</p>
+          </div>
+          <button type="button" id="btn-retry-download" class="btn btn-secondary btn-sm">Tekrar Dene</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <span>KesitAl &copy; 2026 &bull; Ultra Hızlı Video Kırpma Motoru</span>
+    </footer>
+  </div>
+
+  <!-- ES Modül Giriş Noktası -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

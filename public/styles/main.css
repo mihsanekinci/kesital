@@ -1,0 +1,1085 @@
+/**
+ * main.css
+ * KesitAl — Modern macOS Dark Mode Teması ve QuickTime Tarzı Görsel Scrubber Stilleri
+ */
+
+:root {
+  --bg-primary: #0e1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --bg-card-hover: #22272e;
+  --bg-input: #0d1117;
+  
+  --border-color: #30363d;
+  --border-focus: #58a6ff;
+  
+  --text-primary: #f0f6fc;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  
+  /* QuickTime Sarı Vurgusu */
+  --accent-trim: #ffd028;
+  --accent-trim-hover: #ffe066;
+  --accent-trim-glow: rgba(255, 208, 40, 0.4);
+  
+  /* macOS Sistem Renkleri */
+  --accent-blue: #388bfd;
+  --accent-blue-hover: #58a6ff;
+  --accent-green: #2ea043;
+  --accent-green-hover: #3fb950;
+  --accent-red: #f85149;
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-trim: 0 0 12px var(--accent-trim-glow);
+
+  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body.app-body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-layout {
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ==========================================================================
+   Header (macOS Başlık Çubuğu Hissi)
+   ========================================================================== */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-icon {
+  font-size: 28px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
+}
+
+.brand-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.brand-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(46, 160, 67, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(46, 160, 67, 0.3);
+  transition: all 0.2s ease;
+}
+
+.status-pill.status-shutdown {
+  background: rgba(110, 118, 129, 0.18);
+  color: var(--text-secondary);
+  border-color: #30363d;
+}
+
+.pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-green);
+  box-shadow: 0 0 6px var(--accent-green);
+}
+
+.status-pill.status-shutdown .pulse-dot {
+  background-color: #6e7681;
+  box-shadow: none;
+}
+
+/* ⏻ Sunucuyu Kapat Butonu */
+.btn-shutdown {
+  background-color: rgba(248, 81, 73, 0.12);
+  color: #ff7b72;
+  border: 1px solid rgba(248, 81, 73, 0.35);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+}
+
+.btn-shutdown:hover:not(:disabled) {
+  background-color: rgba(248, 81, 73, 0.24);
+  border-color: #f85149;
+  color: #ffa198;
+  box-shadow: 0 0 10px rgba(248, 81, 73, 0.2);
+}
+
+.btn-shutdown:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-shutdown-icon {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Sunucu Kapatıldı Bilgi Bildirimi */
+.shutdown-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(180deg, #1f242c 0%, #161b22 100%);
+  border: 1px solid rgba(248, 81, 73, 0.5);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  animation: fadeInDown 0.3s ease-out;
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.shutdown-banner-icon {
+  font-size: 28px;
+  color: #ff7b72;
+  background: rgba(248, 81, 73, 0.15);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shutdown-banner-content {
+  flex: 1;
+}
+
+.shutdown-banner-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f0f6fc;
+  margin-bottom: 2px;
+}
+
+.shutdown-banner-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   Kart Yapısı ve Adım Başlıkları
+   ========================================================================== */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: #444c56;
+}
+
+.step-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.step-number {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.step-title-wrap {
+  flex: 1;
+}
+
+.step-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   Adım 1: Video Bağlantı Çubuğu
+   ========================================================================== */
+.url-form {
+  margin-bottom: 12px;
+}
+
+.url-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 6px 8px 6px 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.url-input-wrapper:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.25);
+}
+
+.input-prefix-icon {
+  font-size: 16px;
+  opacity: 0.7;
+}
+
+.url-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  font-size: 14px;
+  min-width: 0;
+}
+
+.url-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Buton Stilleri */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-family);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background-color: var(--accent-blue);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-blue-hover);
+}
+
+.btn-secondary {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: #262c36;
+  border-color: #484f58;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* Yükleniyor & Hata Bannerları */
+.inspect-loading-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: rgba(56, 139, 253, 0.1);
+  border: 1px solid rgba(56, 139, 253, 0.3);
+  border-radius: var(--radius-md);
+  color: var(--accent-blue-hover);
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(88, 166, 255, 0.3);
+  border-top-color: var(--accent-blue-hover);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: rgba(248, 81, 73, 0.1);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  border-radius: var(--radius-md);
+  color: #ff7b72;
+  font-size: 13px;
+  margin-top: 10px;
+}
+
+.btn-close-banner {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: #ff7b72;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* ==========================================================================
+   Adım 2: Video Oynatıcı ve Kırpıcı
+   ========================================================================== */
+.video-meta-badge {
+  display: flex;
+  gap: 8px;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-platform {
+  background-color: rgba(255, 0, 0, 0.15);
+  color: #ff4d4d;
+  border: 1px solid rgba(255, 0, 0, 0.3);
+}
+
+.badge-duration {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.video-info-strip {
+  margin-bottom: 14px;
+}
+
+.video-current-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Video Stage */
+.player-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  max-height: 480px;
+  background-color: #000;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 20px;
+}
+
+.player-container {
+  width: 100%;
+  height: 100%;
+}
+
+.player-embed-yt,
+.player-embed-html5 {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: none;
+}
+
+/* ==========================================================================
+   QuickTime Tarzı Görsel Sarı Kırpma Cetveli (TimelineScrubber)
+   ========================================================================== */
+.trimmer-block {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.trimmer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.trimmer-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.trimmer-hint {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.timeline-mount {
+  width: 100%;
+}
+
+.timeline-scrubber-root {
+  position: relative;
+  width: 100%;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Cetvel (Ruler) */
+.timeline-ruler {
+  position: relative;
+  height: 18px;
+  margin-bottom: 4px;
+}
+
+.ruler-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-family: -apple-system, monospace;
+  color: var(--text-muted);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Scrubber Rayı (Track) */
+.timeline-track {
+  position: relative;
+  height: 56px;
+  background-color: #12151b;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid #282e38;
+  cursor: pointer;
+}
+
+/* Cetvel Çentikleri (Ticks) */
+.timeline-ticks {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.timeline-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Pasif Karartma Alanları (Dimmed Overlays) */
+.timeline-dim {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+  z-index: 2;
+  transition: background-color 0.15s ease;
+}
+
+.timeline-dim-left {
+  left: 0;
+}
+
+.timeline-dim-right {
+  right: 0;
+}
+
+/* Sarı Kırpma Çerçevesi (Active Trim Window) */
+.timeline-trim-window {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-top: 4px solid var(--accent-trim);
+  border-bottom: 4px solid var(--accent-trim);
+  z-index: 5;
+  box-shadow: inset 0 0 10px rgba(255, 208, 40, 0.15);
+  pointer-events: none; /* İç tık track'e geçsin */
+}
+
+/* Sarı Tutamaçlar (Handles) */
+.timeline-handle {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 20px;
+  background-color: var(--accent-trim);
+  cursor: ew-resize;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+
+.timeline-handle-left {
+  left: 0;
+  border-radius: 6px 0 0 6px;
+}
+
+.timeline-handle-right {
+  right: 0;
+  border-radius: 0 6px 6px 0;
+}
+
+.timeline-handle:hover,
+.timeline-handle.active {
+  background-color: var(--accent-trim-hover);
+  box-shadow: var(--shadow-trim);
+}
+
+.handle-grip-icon {
+  font-size: 9px;
+  color: #12151b;
+  font-weight: 800;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Tutamaç Zaman Balonu (Time Badge) */
+.handle-badge {
+  position: absolute;
+  top: -26px;
+  background-color: #0d1117;
+  color: var(--accent-trim);
+  border: 1px solid var(--accent-trim);
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  transform: translateX(-50%);
+  left: 50%;
+  opacity: 0.9;
+}
+
+.timeline-scrubber-root.is-dragging .handle-badge {
+  opacity: 1;
+  transform: translateX(-50%) scale(1.08);
+}
+
+/* Playhead (Oynatma İbresi) */
+.timeline-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #fff;
+  z-index: 10;
+  pointer-events: auto;
+  cursor: ew-resize;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.8);
+}
+
+.playhead-cap {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0,0,0,0.8);
+}
+
+.playhead-line {
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   Hızlı İnce Ayar Butonları
+   ========================================================================== */
+.quick-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+}
+
+.control-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.control-box-start {
+  align-items: flex-start;
+}
+
+.control-box-center {
+  align-items: center;
+}
+
+.control-box-end {
+  align-items: flex-end;
+}
+
+.control-box-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.time-adjust-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-pill-step {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-family: monospace;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btn-pill-step:hover {
+  background-color: #2b323b;
+  color: var(--text-primary);
+  border-color: #58a6ff;
+}
+
+.time-numeric-input {
+  width: 90px;
+  text-align: center;
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-family: -apple-system, monospace;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 6px;
+  outline: none;
+}
+
+.time-numeric-input:focus {
+  border-color: var(--accent-trim);
+  box-shadow: 0 0 0 2px rgba(255, 208, 40, 0.2);
+}
+
+.btn-mark-frame {
+  font-size: 11px;
+  padding: 5px 10px;
+}
+
+/* Önizleme Aksiyonları */
+.preview-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-accent {
+  background-color: var(--accent-trim);
+  color: #12151b;
+  font-weight: 700;
+  border-color: rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(255, 208, 40, 0.3);
+}
+
+.btn-accent:hover {
+  background-color: var(--accent-trim-hover);
+  box-shadow: 0 4px 12px rgba(255, 208, 40, 0.5);
+}
+
+.btn-preview-main {
+  padding: 9px 20px;
+  font-size: 13px;
+}
+
+/* Toggle Switch (Döngü) */
+.toggle-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.toggle-checkbox {
+  display: none;
+}
+
+.toggle-slider {
+  width: 30px;
+  height: 16px;
+  background-color: #30363d;
+  border-radius: 999px;
+  position: relative;
+  transition: background-color 0.2s;
+}
+
+.toggle-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-checkbox:checked + .toggle-slider {
+  background-color: var(--accent-blue);
+}
+
+.toggle-checkbox:checked + .toggle-slider::after {
+  transform: translateX(14px);
+}
+
+/* ==========================================================================
+   Adım 3: İndirme Paneli & İlerleme
+   ========================================================================== */
+.download-summary-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 18px 24px;
+  margin-bottom: 16px;
+  gap: 20px;
+}
+
+.summary-details {
+  display: flex;
+  gap: 32px;
+}
+
+.summary-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.summary-value-bold {
+  font-size: 16px;
+  font-weight: 700;
+  font-family: -apple-system, monospace;
+  color: var(--accent-trim);
+}
+
+.summary-badge-duration {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.btn-download-primary {
+  background: linear-gradient(180deg, #2ea043 0%, #238636 100%);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 14px rgba(46, 160, 67, 0.4);
+}
+
+.btn-download-primary:hover {
+  background: linear-gradient(180deg, #34b34b 0%, #29983e 100%);
+  box-shadow: 0 6px 18px rgba(46, 160, 67, 0.6);
+}
+
+/* İlerleme Çubuğu */
+.download-progress-box {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.progress-info-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.progress-status-msg {
+  color: var(--accent-blue-hover);
+  font-weight: 500;
+}
+
+.progress-percent-text {
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--text-primary);
+}
+
+.progress-bar-track {
+  height: 8px;
+  background-color: var(--bg-input);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-blue) 0%, #79c0ff 100%);
+  border-radius: 999px;
+  transition: width 0.2s ease-out;
+}
+
+/* Başarı Kartı */
+.download-success-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: rgba(46, 160, 67, 0.12);
+  border: 1px solid rgba(46, 160, 67, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.success-icon-wrap {
+  font-size: 28px;
+}
+
+.success-content {
+  flex: 1;
+}
+
+.success-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3fb950;
+  margin-bottom: 2px;
+}
+
+.success-filename {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: monospace;
+}
+
+.btn-finder {
+  background-color: #2ea043;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 16px;
+}
+
+.btn-finder:hover {
+  background-color: #3fb950;
+}
+
+/* Hata Kartı */
+.download-error-box {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background-color: rgba(248, 81, 73, 0.12);
+  border: 1px solid rgba(248, 81, 73, 0.4);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ff7b72;
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+/* ==========================================================================
+   Responsive Ayarları
+   ========================================================================== */
+@media (max-width: 768px) {
+  .app-layout {
+    padding: 16px 12px;
+    gap: 16px;
+  }
+
+  .quick-controls-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .control-box-start,
+  .control-box-center,
+  .control-box-end {
+    align-items: center;
+  }
+
+  .download-summary-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+
+  .summary-details {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .url-input-wrapper {
+    flex-wrap: wrap;
+  }
+
+  .btn-icon-text {
+    flex: 1;
+  }
+}
