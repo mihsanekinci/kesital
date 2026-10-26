@@ -1,7 +1,8 @@
 /**
  * TimelineScrubber.js
- * Apple QuickTime ve iOS tarzı çift sarı tutamaçlı görsel video kırpma cetveli.
- * Yüksek hassasiyetli Pointer Events tabanlı canlı kare önizlemesi (onSeek).
+ * Apple QuickTime ve macOS Pro Apps tarzı çift sarı tutamaçlı görsel video kırpma cetveli.
+ * Pointer Events tabanlı canlı kare önizlemesi ve dikey çift çizgi grip yapısı.
+ * Kesinlikle emoji içermez.
  */
 
 import { formatTime, clamp } from './timeUtils.js';
@@ -55,44 +56,58 @@ export class TimelineScrubber {
     // Ana ray
     this.trackEl = document.createElement('div');
     this.trackEl.className = 'timeline-track';
+    this.trackEl.id = 'scrubberTrack';
 
     // Çentikler katmanı
     this.ticksEl = document.createElement('div');
     this.ticksEl.className = 'timeline-ticks';
+    this.ticksEl.id = 'scrubberTicks';
     this.trackEl.appendChild(this.ticksEl);
 
     // Sol pasif karartma maskesi
     this.dimLeftEl = document.createElement('div');
     this.dimLeftEl.className = 'timeline-dim timeline-dim-left';
+    this.dimLeftEl.id = 'scrubberUnselectedLeft';
     this.trackEl.appendChild(this.dimLeftEl);
 
     // Sağ pasif karartma maskesi
     this.dimRightEl = document.createElement('div');
     this.dimRightEl.className = 'timeline-dim timeline-dim-right';
+    this.dimRightEl.id = 'scrubberUnselectedRight';
     this.trackEl.appendChild(this.dimRightEl);
 
     // Sarı Seçim Çerçevesi (QuickTime Trim Window)
     this.trimWindowEl = document.createElement('div');
     this.trimWindowEl.className = 'timeline-trim-window';
+    this.trimWindowEl.id = 'scrubberSelection';
+
+    // Minimalist dikey çift çizgi grip SVG'si (SF Symbols / Final Cut Pro tarzı)
+    const gripSvg = `
+      <svg class="handle-grip-svg" width="6" height="14" viewBox="0 0 6 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M1.5 2V12M4.5 2V12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    `;
 
     // Sol Tutamaç (Başlangıç)
     this.handleLeftEl = document.createElement('div');
     this.handleLeftEl.className = 'timeline-handle timeline-handle-left';
+    this.handleLeftEl.id = 'handleLeft';
     this.handleLeftEl.setAttribute('role', 'slider');
     this.handleLeftEl.setAttribute('aria-label', 'Kesit Başlangıcı');
     this.handleLeftEl.innerHTML = `
-      <div class="handle-grip-icon">◀</div>
-      <div class="handle-badge handle-badge-left">00:00.0</div>
+      <div class="handle-grip-icon">${gripSvg}</div>
+      <div class="handle-badge handle-badge-left" id="badgeLeft">00:00.0</div>
     `;
 
     // Sağ Tutamaç (Bitiş)
     this.handleRightEl = document.createElement('div');
     this.handleRightEl.className = 'timeline-handle timeline-handle-right';
+    this.handleRightEl.id = 'handleRight';
     this.handleRightEl.setAttribute('role', 'slider');
     this.handleRightEl.setAttribute('aria-label', 'Kesit Bitişi');
     this.handleRightEl.innerHTML = `
-      <div class="handle-grip-icon">▶</div>
-      <div class="handle-badge handle-badge-right">00:00.0</div>
+      <div class="handle-grip-icon">${gripSvg}</div>
+      <div class="handle-badge handle-badge-right" id="badgeRight">00:00.0</div>
     `;
 
     this.badgeLeft = this.handleLeftEl.querySelector('.handle-badge-left');
@@ -105,6 +120,7 @@ export class TimelineScrubber {
     // Oynatma Çizgisi (Playhead)
     this.playheadEl = document.createElement('div');
     this.playheadEl.className = 'timeline-playhead';
+    this.playheadEl.id = 'scrubberPlayhead';
     this.playheadEl.innerHTML = `
       <div class="playhead-cap"></div>
       <div class="playhead-line"></div>
@@ -151,7 +167,6 @@ export class TimelineScrubber {
 
     // Çubuğa doğrudan tıklama (Playhead zıplatma)
     this.trackEl.addEventListener('pointerdown', (e) => {
-      // Eğer tutamaçlara tıklandıysa zaten stopPropagation ile yakalandı
       e.preventDefault();
       const rect = this.trackEl.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
@@ -160,11 +175,9 @@ export class TimelineScrubber {
       this.setCurrentTime(targetTime);
       this.options.onSeek(targetTime);
 
-      // Tıklanıp bırakılmadan sürüklemeye devam edilirse playhead sürüklensin
       this._startDrag(e, 'playhead');
     });
 
-    // Global pointermove ve pointerup dinleyicileri
     window.addEventListener('pointermove', (e) => {
       if (!this.isDragging) return;
       this._onDragMove(e);
@@ -214,24 +227,20 @@ export class TimelineScrubber {
     const timeAtX = this._pixelsToSeconds(currentX);
 
     if (this.dragTarget === 'left') {
-      // Sol tutamaç: 0 <= start <= end - minDuration
       const maxStart = Math.max(0, this.endSeconds - this.options.minDuration);
       this.startSeconds = clamp(timeAtX, 0, maxStart);
 
       this._updateVisuals();
-      // Canlı video önizlemesi için anlık seek
       this.options.onSeek(this.startSeconds);
       this.options.onTrimChange({
         startSeconds: this.startSeconds,
         endSeconds: this.endSeconds
       });
     } else if (this.dragTarget === 'right') {
-      // Sağ tutamaç: start + minDuration <= end <= duration
       const minEnd = Math.min(this.duration, this.startSeconds + this.options.minDuration);
       this.endSeconds = clamp(timeAtX, minEnd, this.duration);
 
       this._updateVisuals();
-      // Canlı video önizlemesi için anlık seek
       this.options.onSeek(this.endSeconds);
       this.options.onTrimChange({
         startSeconds: this.startSeconds,
@@ -266,10 +275,6 @@ export class TimelineScrubber {
     this.activePointerId = null;
   }
 
-  /**
-   * Piksel mesafesini saniyeye dönüştürür
-   * @private
-   */
   _pixelsToSeconds(px) {
     const width = this.trackEl.clientWidth;
     if (width <= 0 || this.duration <= 0) return 0;
@@ -277,19 +282,11 @@ export class TimelineScrubber {
     return ratio * this.duration;
   }
 
-  /**
-   * Saniyeyi yüzdeye dönüştürür (0 - 100)
-   * @private
-   */
   _secondsToPercent(seconds) {
     if (this.duration <= 0) return 0;
     return clamp((seconds / this.duration) * 100, 0, 100);
   }
 
-  /**
-   * Arayüz elemanlarının pozisyonlarını ve rozetlerini günceller
-   * @private
-   */
   _updateVisuals() {
     if (this.duration <= 0) return;
 
@@ -297,28 +294,20 @@ export class TimelineScrubber {
     const endPct = this._secondsToPercent(this.endSeconds);
     const widthPct = Math.max(0, endPct - startPct);
 
-    // Karartma maskeleri
     this.dimLeftEl.style.width = `${startPct}%`;
     this.dimRightEl.style.left = `${endPct}%`;
     this.dimRightEl.style.width = `${Math.max(0, 100 - endPct)}%`;
 
-    // Sarı trim çerçevesi
     this.trimWindowEl.style.left = `${startPct}%`;
     this.trimWindowEl.style.width = `${widthPct}%`;
 
-    // Tutamaç etiketleri
     this.badgeLeft.textContent = formatTime(this.startSeconds, true);
     this.badgeRight.textContent = formatTime(this.endSeconds, true);
 
-    // Playhead pozisyonu
     const playheadPct = this._secondsToPercent(this.currentPlayheadSeconds);
     this.playheadEl.style.left = `${playheadPct}%`;
   }
 
-  /**
-   * Zaman cetvelini (zaman etiketleri ve çentikleri) oluşturur
-   * @private
-   */
   _renderRuler() {
     if (this.duration <= 0) return;
 
@@ -328,25 +317,21 @@ export class TimelineScrubber {
     const width = this.trackEl.clientWidth;
     if (width < 200) return;
 
-    // Durasyona göre adım belirle (yaklaşık her 80px'e bir etiket)
     const targetLabelCount = Math.max(3, Math.floor(width / 90));
     const rawStep = this.duration / targetLabelCount;
 
-    // Makul saniye adımları
     const steps = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 1800, 3600];
     let step = steps.find(s => s >= rawStep) || steps[steps.length - 1];
 
     for (let time = 0; time <= this.duration; time += step) {
       const pct = (time / this.duration) * 100;
 
-      // Cetvel zaman etiketi
       const label = document.createElement('span');
       label.className = 'ruler-label';
       label.style.left = `${pct}%`;
       label.textContent = formatTime(time, false);
       this.rulerEl.appendChild(label);
 
-      // Çentik
       const tick = document.createElement('div');
       tick.className = 'timeline-tick';
       tick.style.left = `${pct}%`;
@@ -354,14 +339,6 @@ export class TimelineScrubber {
     }
   }
 
-  // --- Dışarıya Açık API Metotları ---
-
-  /**
-   * Videonun toplam süresini ayarlar ve varsayılan kırpma aralığını kurar.
-   * @param {number} durationSeconds
-   * @param {number} [initialStart=0]
-   * @param {number} [initialEnd=null]
-   */
   setDuration(durationSeconds, initialStart = 0, initialEnd = null) {
     this.duration = Math.max(0, durationSeconds);
     this.startSeconds = clamp(initialStart, 0, this.duration);
@@ -377,12 +354,6 @@ export class TimelineScrubber {
     });
   }
 
-  /**
-   * Kırpma aralığını programatik olarak ayarlar.
-   * @param {number} startSeconds
-   * @param {number} endSeconds
-   * @param {boolean} [notify=true]
-   */
   setTrim(startSeconds, endSeconds, notify = true) {
     if (this.duration <= 0) return;
 
@@ -402,26 +373,14 @@ export class TimelineScrubber {
     }
   }
 
-  /**
-   * Başlangıç zamanını ayarlar
-   * @param {number} start
-   */
   setStartTime(start) {
     this.setTrim(start, this.endSeconds, true);
   }
 
-  /**
-   * Bitiş zamanını ayarlar
-   * @param {number} end
-   */
   setEndTime(end) {
     this.setTrim(this.startSeconds, end, true);
   }
 
-  /**
-   * Oynatma ibresini günceller (video oynarken çağrılır)
-   * @param {number} seconds
-   */
   setCurrentTime(seconds) {
     this.currentPlayheadSeconds = clamp(seconds, 0, this.duration);
     if (!this.isDragging) {
@@ -430,10 +389,6 @@ export class TimelineScrubber {
     }
   }
 
-  /**
-   * Geçerli kırpma aralığını döner.
-   * @returns {{ startSeconds: number, endSeconds: number, duration: number }}
-   */
   getTrim() {
     return {
       startSeconds: this.startSeconds,
@@ -442,9 +397,6 @@ export class TimelineScrubber {
     };
   }
 
-  /**
-   * Temizlik
-   */
   destroy() {
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();

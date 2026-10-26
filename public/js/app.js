@@ -1,7 +1,7 @@
 /**
  * app.js
- * KesitAl — Ana Uygulama Orkestratörü
- * Arayüz etkileşimleri, PlayerAdapter, TimelineScrubber ve Backend API entegrasyonu.
+ * KesitAl Studio — Ana Uygulama Orkestratörü
+ * Anti-AI-Slop, Sıfır Emoji, Profesyonel macOS Klavye Kısayolları ve Reaktif Durum Yönetimi.
  */
 
 import { formatTime, parseTime, formatDurationHuman, clamp } from './timeUtils.js';
@@ -32,69 +32,77 @@ class KesitAlApp {
     this._bindEvents();
     this._initScrubber();
     this._startHeartbeat();
+    this._bindKeyboardShortcuts();
   }
 
   /**
    * DOM element referanslarını önbelleğe alır.
+   * Kesin ID listesi ve geriye dönük güvenli fallback yapısı.
    * @private
    */
   _cacheDOM() {
     // Header & Sistem Durumu
     this.serverStatusPill = document.getElementById('serverStatusPill');
-    this.serverStatusDot = document.getElementById('serverStatusDot');
-    this.serverStatusText = document.getElementById('serverStatusText');
+    this.statusDot = document.getElementById('statusDot') || document.getElementById('serverStatusDot');
+    this.statusText = document.getElementById('statusText') || document.getElementById('serverStatusText');
     this.shutdownServerBtn = document.getElementById('shutdownServerBtn');
     this.shutdownBanner = document.getElementById('shutdownBanner');
 
-    // Adım 1 Elemanları
-    this.sectionInput = document.getElementById('section-input');
-    this.urlForm = document.getElementById('url-form');
-    this.urlInput = document.getElementById('video-url-input');
-    this.btnPaste = document.getElementById('btn-paste');
-    this.btnInspect = document.getElementById('btn-inspect');
-    this.inspectLoading = document.getElementById('inspect-loading');
-    this.inspectError = document.getElementById('inspect-error');
-    this.inspectErrorMsg = document.getElementById('inspect-error-msg');
-    this.btnCloseInspectError = document.getElementById('btn-close-inspect-error');
+    // Komut Çubuğu & URL Formu
+    this.urlForm = document.getElementById('urlForm') || document.getElementById('url-form');
+    this.urlInput = document.getElementById('urlInput') || document.getElementById('video-url-input');
+    this.pasteBtn = document.getElementById('pasteBtn') || document.getElementById('btn-paste');
+    this.loadVideoBtn = document.getElementById('loadVideoBtn') || document.getElementById('btn-inspect');
 
-    // Adım 2 Elemanları
-    this.sectionWorkspace = document.getElementById('section-workspace');
-    this.videoTitle = document.getElementById('video-title');
-    this.metaPlatformPill = document.getElementById('meta-platform-pill');
-    this.metaDurationPill = document.getElementById('meta-duration-pill');
-    this.playerContainer = document.getElementById('player-container');
-    this.timelineMount = document.getElementById('timeline-mount');
+    // Bildirim ve Yükleme Panelleri
+    this.inspectLoading = document.getElementById('inspectLoading') || document.getElementById('inspect-loading');
+    this.errorBanner = document.getElementById('errorBanner') || document.getElementById('inspect-error');
+    this.errorMessage = document.getElementById('errorMessage') || document.getElementById('inspect-error-msg');
+    this.closeErrorBtn = document.getElementById('closeErrorBtn') || document.getElementById('btn-close-inspect-error');
 
-    this.inputStartTime = document.getElementById('input-start-time');
-    this.inputEndTime = document.getElementById('input-end-time');
-    this.btnStartMinus = document.getElementById('btn-start-minus');
-    this.btnStartPlus = document.getElementById('btn-start-plus');
-    this.btnEndMinus = document.getElementById('btn-end-minus');
-    this.btnEndPlus = document.getElementById('btn-end-plus');
-    this.btnSetStartHere = document.getElementById('btn-set-start-here');
-    this.btnSetEndHere = document.getElementById('btn-set-end-here');
+    // Sahne & Çalışma Alanı
+    this.emptyStagePlaceholder = document.getElementById('emptyStagePlaceholder');
+    this.workspaceSection = document.getElementById('workspaceSection') || document.getElementById('section-workspace');
+    this.exportSection = document.getElementById('exportSection') || document.getElementById('section-download');
 
-    this.btnPreviewClip = document.getElementById('btn-preview-clip');
-    this.chkLoopClip = document.getElementById('chk-loop-clip');
+    // Video Üst Şerit
+    this.videoTitle = document.getElementById('videoTitle') || document.getElementById('video-title');
+    this.videoPlatformBadge = document.getElementById('videoPlatformBadge') || document.getElementById('meta-platform-pill');
+    this.videoDurationBadge = document.getElementById('videoDurationBadge') || document.getElementById('meta-duration-pill');
+    this.playerContainer = document.getElementById('playerContainer') || document.getElementById('player-container');
+    this.timelineMount = document.getElementById('timelineMount') || document.getElementById('timeline-mount');
 
-    // Adım 3 Elemanları
-    this.sectionDownload = document.getElementById('section-download');
-    this.summaryRangeText = document.getElementById('summary-range-text');
-    this.summaryDurationText = document.getElementById('summary-duration-text');
-    this.btnDownloadClip = document.getElementById('btn-download-clip');
+    // GİRİŞ / ÇIKIŞ Zaman Kontrolleri
+    this.startTimeInput = document.getElementById('startTimeInput') || document.getElementById('input-start-time');
+    this.endTimeInput = document.getElementById('endTimeInput') || document.getElementById('input-end-time');
+    this.startMinusBtn = document.getElementById('startMinusBtn') || document.getElementById('btn-start-minus');
+    this.startPlusBtn = document.getElementById('startPlusBtn') || document.getElementById('btn-start-plus');
+    this.endMinusBtn = document.getElementById('endMinusBtn') || document.getElementById('btn-end-minus');
+    this.endPlusBtn = document.getElementById('endPlusBtn') || document.getElementById('btn-end-plus');
+    this.setStartCurrentBtn = document.getElementById('setStartCurrentBtn') || document.getElementById('btn-set-start-here');
+    this.setEndCurrentBtn = document.getElementById('setEndCurrentBtn') || document.getElementById('btn-set-end-here');
 
-    this.downloadProgressBox = document.getElementById('download-progress-box');
-    this.progressStatusMsg = document.getElementById('progress-status-msg');
-    this.progressPercentText = document.getElementById('progress-percent-text');
-    this.progressBarFill = document.getElementById('progress-bar-fill');
+    // Önizleme & Döngü
+    this.previewClipBtn = document.getElementById('previewClipBtn') || document.getElementById('btn-preview-clip');
+    this.previewClipIcon = document.getElementById('previewClipIcon');
+    this.previewClipLabel = document.getElementById('previewClipLabel');
+    this.loopToggle = document.getElementById('loopToggle') || document.getElementById('chk-loop-clip');
 
-    this.downloadSuccessBox = document.getElementById('download-success-box');
-    this.successFilename = document.getElementById('success-filename');
-    this.btnRevealFinder = document.getElementById('btn-reveal-finder');
+    // Süre Metrikleri
+    this.selectedRangeSummary = document.getElementById('selectedRangeSummary') || document.getElementById('summary-range-text');
+    this.selectedDurationSummary = document.getElementById('selectedDurationSummary') || document.getElementById('summary-duration-text');
 
-    this.downloadErrorBox = document.getElementById('download-error-box');
-    this.downloadErrorMsg = document.getElementById('download-error-msg');
-    this.btnRetryDownload = document.getElementById('btn-retry-download');
+    // Dışa Aktar & İlerleme
+    this.downloadClipBtn = document.getElementById('downloadClipBtn') || document.getElementById('btn-download-clip');
+    this.downloadProgressArea = document.getElementById('downloadProgressArea') || document.getElementById('download-progress-box');
+    this.progressStatusText = document.getElementById('progressStatusText') || document.getElementById('progress-status-msg');
+    this.progressPercentText = document.getElementById('progressPercentText') || document.getElementById('progress-percent-text');
+    this.progressBarFill = document.getElementById('progressBarFill') || document.getElementById('progress-bar-fill');
+
+    // Başarı Kartı
+    this.downloadSuccessCard = document.getElementById('downloadSuccessCard') || document.getElementById('download-success-box');
+    this.savedFileName = document.getElementById('savedFileName') || document.getElementById('success-filename');
+    this.revealInFinderBtn = document.getElementById('revealInFinderBtn') || document.getElementById('btn-reveal-finder');
   }
 
   /**
@@ -104,13 +112,11 @@ class KesitAlApp {
   _initScrubber() {
     this.scrubber = new TimelineScrubber(this.timelineMount, {
       minDuration: 0.5,
-      // Kullanıcı tutamaçları sürüklerken anlık kare önizlemesi
       onSeek: (seconds) => {
         if (this.player && this.player.isReady) {
           this.player.seekTo(seconds);
         }
       },
-      // Kırpma aralığı değiştikçe input ve özetleri senkronize et
       onTrimChange: (range) => {
         this._applyTrimUpdate(range.startSeconds, range.endSeconds);
       },
@@ -121,90 +127,92 @@ class KesitAlApp {
   }
 
   /**
-   * Tüm UI dinleyicilerini bağlar.
+   * UI dinleyicilerini bağlar.
    * @private
    */
   _bindEvents() {
     // Form Submit (Videoyu Yükle)
-    this.urlForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.handleInspect();
-    });
+    if (this.urlForm) {
+      this.urlForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        this.handleInspect();
+      });
+    }
+
+    if (this.loadVideoBtn) {
+      this.loadVideoBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.handleInspect();
+      });
+    }
+
+    // Pano Yapıştır Butonu
+    if (this.pasteBtn) {
+      this.pasteBtn.addEventListener('click', async () => {
+        try {
+          const text = await navigator.clipboard.readText();
+          if (text && text.trim()) {
+            this.urlInput.value = text.trim();
+            this.handleInspect();
+          }
+        } catch (err) {
+          this.urlInput.focus();
+          this.urlInput.select();
+        }
+      });
+    }
+
+    // Inputa yapıştırma anında otomatik inceleme
+    if (this.urlInput) {
+      this.urlInput.addEventListener('paste', () => {
+        setTimeout(() => {
+          if (this.urlInput.value.trim()) {
+            this.handleInspect();
+          }
+        }, 50);
+      });
+    }
+
+    // Hata Kapat Butonu
+    if (this.closeErrorBtn) {
+      this.closeErrorBtn.addEventListener('click', () => {
+        this.errorBanner?.classList.add('hidden');
+      });
+    }
 
     // Sunucuyu Kapat Butonu
     if (this.shutdownServerBtn) {
       this.shutdownServerBtn.addEventListener('click', () => this.handleServerShutdown());
     }
 
-    // Pano Yapıştır Butonu
-    this.btnPaste.addEventListener('click', async () => {
-      try {
-        const text = await navigator.clipboard.readText();
-        if (text && text.trim()) {
-          this.urlInput.value = text.trim();
-          this.handleInspect();
-        }
-      } catch (err) {
-        console.warn('Pano okunamadı, manuel yapıştırma bekleniyor.', err);
-        this.urlInput.focus();
-        this.urlInput.select();
-      }
-    });
+    // Manuel Zaman Girişleri
+    if (this.startTimeInput) {
+      this.startTimeInput.addEventListener('change', () => this._handleManualTimeInput('start'));
+    }
+    if (this.endTimeInput) {
+      this.endTimeInput.addEventListener('change', () => this._handleManualTimeInput('end'));
+    }
 
-    // Kullanıcı inputa manuel link yapıştırdığında otomatik inceleme
-    this.urlInput.addEventListener('paste', () => {
-      setTimeout(() => {
-        if (this.urlInput.value.trim()) {
-          this.handleInspect();
-        }
-      }, 50);
-    });
-
-    // Hata Kapat Butonu
-    this.btnCloseInspectError.addEventListener('click', () => {
-      this.inspectError.classList.add('hidden');
-    });
-
-    // Başlangıç / Bitiş Kutusundan Manuel Girişler
-    this.inputStartTime.addEventListener('change', () => this._handleManualTimeInput('start'));
-    this.inputEndTime.addEventListener('change', () => this._handleManualTimeInput('end'));
-
-    // Hassas -0.5s / +0.5s Butonları
-    this.btnStartMinus.addEventListener('click', () => this._adjustTrim('start', -0.5));
-    this.btnStartPlus.addEventListener('click', () => this._adjustTrim('start', 0.5));
-    this.btnEndMinus.addEventListener('click', () => this._adjustTrim('end', -0.5));
-    this.btnEndPlus.addEventListener('click', () => this._adjustTrim('end', 0.5));
+    // Adım -0.5s / +0.5s Butonları
+    this.startMinusBtn?.addEventListener('click', () => this._adjustTrim('start', -0.5));
+    this.startPlusBtn?.addEventListener('click', () => this._adjustTrim('start', 0.5));
+    this.endMinusBtn?.addEventListener('click', () => this._adjustTrim('end', -0.5));
+    this.endPlusBtn?.addEventListener('click', () => this._adjustTrim('end', 0.5));
 
     // "Şu Anki Kareyi Ayarla" Butonları
-    this.btnSetStartHere.addEventListener('click', () => {
-      if (!this.player) return;
-      const cur = this.player.getCurrentTime();
-      if (cur < this.trimRange.endSeconds) {
-        this.scrubber.setStartTime(cur);
-      }
-    });
+    this.setStartCurrentBtn?.addEventListener('click', () => this.setInPoint());
+    this.setEndCurrentBtn?.addEventListener('click', () => this.setOutPoint());
 
-    this.btnSetEndHere.addEventListener('click', () => {
-      if (!this.player) return;
-      const cur = this.player.getCurrentTime();
-      if (cur > this.trimRange.startSeconds) {
-        this.scrubber.setEndTime(cur);
-      }
-    });
-
-    // Seçili Kesiti Önizleme / Oynatma
-    this.btnPreviewClip.addEventListener('click', () => this.togglePreviewClip());
+    // Kesiti Önizleme / Oynatma
+    this.previewClipBtn?.addEventListener('click', () => this.togglePreviewClip());
 
     // MP4 İndirme Butonu
-    this.btnDownloadClip.addEventListener('click', () => this.startDownload());
+    this.downloadClipBtn?.addEventListener('click', () => this.startDownload());
 
     // Finder'da Göster Butonu
-    this.btnRevealFinder.addEventListener('click', () => this.revealInFinder());
+    this.revealInFinderBtn?.addEventListener('click', () => this.revealInFinder());
 
-    // Hata Sonrası Tekrar Dene Butonu
-    this.btnRetryDownload.addEventListener('click', () => this.startDownload());
-
-    // Oynatıcı Hazır Olduğunda Süreyi Kesinleştir (Örn: Instagram Reels / ffprobe / loadedmetadata)
+    // Oynatıcı Süre ve Durum Takibi
     this.player.onReady(() => {
       const actualDuration = this.player.getDuration();
       if (actualDuration && actualDuration > 0) {
@@ -213,21 +221,22 @@ class KesitAlApp {
           if (this.currentVideo) {
             this.currentVideo.durationSeconds = actualDuration;
           }
-          this.metaDurationPill.textContent = formatTime(actualDuration, false);
+          if (this.videoDurationBadge) {
+            this.videoDurationBadge.textContent = formatTime(actualDuration, false);
+          }
           this.scrubber.setDuration(actualDuration, 0, actualDuration);
           this._applyTrimUpdate(0, actualDuration);
         }
       }
     });
 
-    // Oynatıcı Süre Takibi
     this.player.onTimeUpdate((currentTime) => {
       this.scrubber.setCurrentTime(currentTime);
 
-      // Seçili kesit oynatılırken veya döngü etkinken bitiş noktası kontrolü
       if (this.isPlayingPreview) {
         if (currentTime >= this.trimRange.endSeconds || currentTime < this.trimRange.startSeconds - 0.2) {
-          if (this.chkLoopClip.checked) {
+          const isLoop = this.loopToggle ? this.loopToggle.checked : true;
+          if (isLoop) {
             this.player.seekTo(this.trimRange.startSeconds);
             this.player.play();
           } else {
@@ -241,7 +250,8 @@ class KesitAlApp {
 
     this.player.onStateChange((state) => {
       if (state === 'paused' || state === 'ended') {
-        if (!this.chkLoopClip.checked) {
+        const isLoop = this.loopToggle ? this.loopToggle.checked : true;
+        if (!isLoop) {
           this._setPreviewButtonState(false);
         }
       }
@@ -253,7 +263,65 @@ class KesitAlApp {
   }
 
   /**
-   * Adım 1: Video Bağlantısını Sunucuya Gönderip İnceler.
+   * macOS Stüdyo Klavye Kısayolları:
+   * Space: Oynat / Durdur
+   * I: Giriş Noktası (In Point)
+   * O: Çıkış Noktası (Out Point)
+   * @private
+   */
+  _bindKeyboardShortcuts() {
+    window.addEventListener('keydown', (e) => {
+      // Eğer kullanıcı bir input, textarea veya içerik düzenlenebilir alandaysa kısayolları yutma
+      const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (activeTag === 'input' || activeTag === 'textarea' || document.activeElement?.isContentEditable) {
+        return;
+      }
+
+      // Video henüz yüklenmediyse kısayolları çalıştırma
+      if (!this.currentVideo || !this.player.isReady) {
+        return;
+      }
+
+      if (e.code === 'Space') {
+        e.preventDefault();
+        this.togglePlayPause();
+      } else if (e.key === 'i' || e.key === 'I') {
+        e.preventDefault();
+        this.setInPoint();
+      } else if (e.key === 'o' || e.key === 'O') {
+        e.preventDefault();
+        this.setOutPoint();
+      }
+    });
+  }
+
+  setInPoint() {
+    if (!this.player) return;
+    const cur = this.player.getCurrentTime();
+    if (cur < this.trimRange.endSeconds) {
+      this.scrubber.setStartTime(cur);
+    }
+  }
+
+  setOutPoint() {
+    if (!this.player) return;
+    const cur = this.player.getCurrentTime();
+    if (cur > this.trimRange.startSeconds) {
+      this.scrubber.setEndTime(cur);
+    }
+  }
+
+  togglePlayPause() {
+    if (this.player.isPlaying()) {
+      this.player.pause();
+      this._setPreviewButtonState(false);
+    } else {
+      this.player.play();
+    }
+  }
+
+  /**
+   * Video Bağlantısını Sunucuya Gönderip İnceler.
    */
   async handleInspect() {
     const url = this.urlInput.value.trim();
@@ -298,15 +366,16 @@ class KesitAlApp {
     };
 
     // Başlık ve meta rozetler
-    this.videoTitle.textContent = videoData.title || 'Video Başlığı';
-    this.metaPlatformPill.textContent = (videoData.platform || 'Video').toUpperCase();
-    this.metaDurationPill.textContent = formatTime(videoData.durationSeconds || 0, false);
+    if (this.videoTitle) this.videoTitle.textContent = videoData.title || 'Video Başlığı';
+    if (this.videoPlatformBadge) this.videoPlatformBadge.textContent = (videoData.platform || 'VIDEO').toUpperCase();
+    if (this.videoDurationBadge) this.videoDurationBadge.textContent = formatTime(videoData.durationSeconds || 0, false);
 
-    // Adım 2 ve Adım 3 kartlarını görünür yap
-    this.sectionWorkspace.classList.remove('hidden');
-    this.sectionDownload.classList.remove('hidden');
+    // Boş sahneyi gizle, stüdyo konsolunu aç
+    if (this.emptyStagePlaceholder) this.emptyStagePlaceholder.classList.add('hidden');
+    if (this.workspaceSection) this.workspaceSection.classList.remove('hidden');
+    if (this.exportSection) this.exportSection.classList.remove('hidden');
 
-    // Scrubber'ı süresiyle başlat
+    // Scrubber'ı başlat
     const duration = videoData.durationSeconds || 60;
     this.scrubber.setDuration(duration, 0, duration);
 
@@ -317,43 +386,40 @@ class KesitAlApp {
       console.warn('Oynatıcı başlatılırken uyarı:', err);
     }
 
-    // Pürüzsüzce çalışma alanına kaydır
-    this.sectionWorkspace.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.workspaceSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   /**
-   * Kırpma aralığı güncellendiğinde inputları ve özet alanlarını senkronize eder.
+   * Kırpma aralığı senkronizasyonu
    * @private
    */
   _applyTrimUpdate(start, end) {
     this.trimRange.startSeconds = start;
     this.trimRange.endSeconds = end;
 
-    // İnput kutularını güncelle (eğer o anda aktif odaklanma yoksa)
-    if (document.activeElement !== this.inputStartTime) {
-      this.inputStartTime.value = formatTime(start, true);
+    if (document.activeElement !== this.startTimeInput && this.startTimeInput) {
+      this.startTimeInput.value = formatTime(start, true);
     }
-    if (document.activeElement !== this.inputEndTime) {
-      this.inputEndTime.value = formatTime(end, true);
+    if (document.activeElement !== this.endTimeInput && this.endTimeInput) {
+      this.endTimeInput.value = formatTime(end, true);
     }
 
-    // Adım 3 Özet Metinleri
     const duration = Math.max(0, end - start);
-    this.summaryRangeText.textContent = `${formatTime(start, true)} ➔ ${formatTime(end, true)}`;
-    this.summaryDurationText.textContent = formatDurationHuman(duration);
+    if (this.selectedRangeSummary) {
+      this.selectedRangeSummary.textContent = `${formatTime(start, true)} → ${formatTime(end, true)}`;
+    }
+    if (this.selectedDurationSummary) {
+      this.selectedDurationSummary.textContent = formatDurationHuman(duration);
+    }
   }
 
-  /**
-   * Başlangıç / Bitiş kutularına elle girilen değeri çözümler.
-   * @private
-   */
   _handleManualTimeInput(type) {
     const isStart = type === 'start';
-    const inputEl = isStart ? this.inputStartTime : this.inputEndTime;
-    const parsed = parseTime(inputEl.value);
+    const inputEl = isStart ? this.startTimeInput : this.endTimeInput;
+    if (!inputEl) return;
 
+    const parsed = parseTime(inputEl.value);
     if (parsed === null) {
-      // Geçersiz format: Eski değere geri dön
       inputEl.value = formatTime(isStart ? this.trimRange.startSeconds : this.trimRange.endSeconds, true);
       return;
     }
@@ -367,10 +433,6 @@ class KesitAlApp {
     }
   }
 
-  /**
-   * -0.5s / +0.5s butonlarıyla ince ayar yapar.
-   * @private
-   */
   _adjustTrim(type, deltaSeconds) {
     if (type === 'start') {
       const newStart = clamp(this.trimRange.startSeconds + deltaSeconds, 0, this.trimRange.endSeconds - 0.2);
@@ -384,9 +446,6 @@ class KesitAlApp {
     }
   }
 
-  /**
-   * Seçili kesiti oynat / duraklat geçişi yapar.
-   */
   togglePreviewClip() {
     if (this.isPlayingPreview && this.player.isPlaying()) {
       this.player.pause();
@@ -399,36 +458,51 @@ class KesitAlApp {
     }
   }
 
+  /**
+   * Kesiti Önizle butonunun ikon ve metnini günceller (Sıfır emoji, saf SVG).
+   * @private
+   */
   _setPreviewButtonState(isPlaying) {
     this.isPlayingPreview = isPlaying;
-    const icon = this.btnPreviewClip.querySelector('.btn-icon');
-    const label = this.btnPreviewClip.querySelector('.btn-label');
+    if (!this.previewClipBtn) return;
+
+    const playSvg = `
+      <svg class="ui-icon" id="previewClipIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="6 3 20 12 6 21 6 3"/>
+      </svg>
+    `;
+
+    const pauseSvg = `
+      <svg class="ui-icon" id="previewClipIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="10" y1="4" x2="10" y2="20"/>
+        <line x1="14" y1="4" x2="14" y2="20"/>
+      </svg>
+    `;
+
     if (isPlaying) {
-      icon.textContent = '⏸';
-      label.textContent = 'Durdur';
-      this.btnPreviewClip.classList.add('btn-preview-active');
+      this.previewClipBtn.innerHTML = `${pauseSvg}<span id="previewClipLabel">Durdur</span>`;
+      this.previewClipBtn.classList.add('is-playing');
     } else {
-      icon.textContent = '▶';
-      label.textContent = 'Seçili Kesiti Oynat';
-      this.btnPreviewClip.classList.remove('btn-preview-active');
+      this.previewClipBtn.innerHTML = `${playSvg}<span id="previewClipLabel">Kesiti Önizle</span>`;
+      this.previewClipBtn.classList.remove('is-playing');
     }
   }
 
   /**
-   * Adım 3: Kesit İndirme Başlatma (SSE veya Polling ile canlı takip)
+   * MP4 İndirme Başlatma (SSE ve Polling destekli)
    */
   async startDownload() {
     if (!this.currentVideo) return;
 
-    // Önceki izleyicileri temizle
     this._cleanupProgressListeners();
 
-    // UI hazırlığı
-    this.btnDownloadClip.disabled = true;
-    this.btnDownloadClip.style.opacity = '0.6';
-    this.downloadProgressBox.classList.remove('hidden');
-    this.downloadSuccessBox.classList.add('hidden');
-    this.downloadErrorBox.classList.add('hidden');
+    if (this.downloadClipBtn) {
+      this.downloadClipBtn.disabled = true;
+      this.downloadClipBtn.style.opacity = '0.5';
+    }
+
+    if (this.downloadProgressArea) this.downloadProgressArea.classList.remove('hidden');
+    if (this.downloadSuccessCard) this.downloadSuccessCard.classList.add('hidden');
 
     this._updateProgress(0, 'İndirme ve kesme görevi başlatılıyor...');
 
@@ -453,8 +527,6 @@ class KesitAlApp {
 
       const jobData = await res.json();
       this.activeJobId = jobData.jobId;
-
-      // İlerleme takibini başlat (SSE öncelikli)
       this._subscribeJobProgress(jobData.jobId);
     } catch (err) {
       console.error('İndirme başlatılamadı:', err);
@@ -462,11 +534,6 @@ class KesitAlApp {
     }
   }
 
-  /**
-   * SSE (Server-Sent Events) ile canlı indirme ilerlemesini dinler.
-   * Desteklenmezse veya hata olursa otomatik polling'e geçer.
-   * @private
-   */
   _subscribeJobProgress(jobId) {
     if (window.EventSource) {
       try {
@@ -478,29 +545,24 @@ class KesitAlApp {
             const data = JSON.parse(event.data);
             this._handleJobUpdate(data);
           } catch (e) {
-            console.error('SSE JSON parse hatası:', e);
+            console.error('SSE JSON hatası:', e);
           }
         };
 
         sse.onerror = (err) => {
-          console.warn('SSE bağlantısı kesildi, Polling moduna geçiliyor...', err);
           sse.close();
           this.activeEventSource = null;
           this._startPollingJobProgress(jobId);
         };
         return;
       } catch (err) {
-        console.warn('SSE başlatılamadı, Polling ile devam edilecek.', err);
+        console.warn('SSE başlatılamadı, polling modu:', err);
       }
     }
 
     this._startPollingJobProgress(jobId);
   }
 
-  /**
-   * Fallback Polling mekanizması
-   * @private
-   */
   _startPollingJobProgress(jobId) {
     if (this.activePollingTimer) clearInterval(this.activePollingTimer);
 
@@ -510,16 +572,10 @@ class KesitAlApp {
         if (!res.ok) return;
         const data = await res.json();
         this._handleJobUpdate(data);
-      } catch (e) {
-        console.warn('Polling sorgusu başarısız:', e);
-      }
+      } catch (e) {}
     }, 1000);
   }
 
-  /**
-   * İş güncelleme durumlarını karşılar.
-   * @private
-   */
   _handleJobUpdate(job) {
     if (!job) return;
 
@@ -534,54 +590,45 @@ class KesitAlApp {
     }
   }
 
-  /**
-   * İlerleme çubuğunu günceller.
-   * @private
-   */
   _updateProgress(percent, message) {
     const clampedPct = Math.round(clamp(percent, 0, 100));
-    this.progressBarFill.style.width = `${clampedPct}%`;
-    this.progressPercentText.textContent = `%${clampedPct}`;
-    this.progressStatusMsg.textContent = message;
+    if (this.progressBarFill) this.progressBarFill.style.width = `${clampedPct}%`;
+    if (this.progressPercentText) this.progressPercentText.textContent = `%${clampedPct}`;
+    if (this.progressStatusText) this.progressStatusText.textContent = message;
   }
 
-  /**
-   * İndirme başarıyla tamamlandığında
-   * @private
-   */
   _onDownloadCompleted(job) {
-    this.downloadProgressBox.classList.add('hidden');
-    this.downloadSuccessBox.classList.remove('hidden');
+    if (this.downloadProgressArea) this.downloadProgressArea.classList.add('hidden');
+    if (this.downloadSuccessCard) this.downloadSuccessCard.classList.remove('hidden');
 
     this.lastOutputFile = job.outputFilePath;
-    this.successFilename.textContent = job.fileName || 'kesit.mp4';
+    if (this.savedFileName) this.savedFileName.textContent = job.fileName || 'kesit.mp4';
 
-    this.btnDownloadClip.disabled = false;
-    this.btnDownloadClip.style.opacity = '1';
+    if (this.downloadClipBtn) {
+      this.downloadClipBtn.disabled = false;
+      this.downloadClipBtn.style.opacity = '1';
+    }
   }
 
-  /**
-   * İndirme hata verdiğinde
-   * @private
-   */
   _onDownloadFailed(errorMsg) {
-    this.downloadProgressBox.classList.add('hidden');
-    this.downloadErrorBox.classList.remove('hidden');
-    this.downloadErrorMsg.textContent = errorMsg;
+    if (this.downloadProgressArea) this.downloadProgressArea.classList.add('hidden');
+    this._showInspectError(errorMsg);
 
-    this.btnDownloadClip.disabled = false;
-    this.btnDownloadClip.style.opacity = '1';
+    if (this.downloadClipBtn) {
+      this.downloadClipBtn.disabled = false;
+      this.downloadClipBtn.style.opacity = '1';
+    }
   }
 
   /**
-   * İndirilen dosyayı Finder'da vurgular.
+   * İndirilen dosyayı Finder'da gösterir (Sıfır emoji, saf SVG).
    */
   async revealInFinder() {
-    if (!this.lastOutputFile) return;
+    if (!this.lastOutputFile || !this.revealInFinderBtn) return;
 
-    const originalText = this.btnRevealFinder.innerHTML;
+    const originalHtml = this.revealInFinderBtn.innerHTML;
     try {
-      this.btnRevealFinder.innerHTML = '<span>Açılıyor...</span>';
+      this.revealInFinderBtn.innerHTML = `<span>Açılıyor...</span>`;
       const res = await fetch('/api/system/reveal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -589,16 +636,20 @@ class KesitAlApp {
       });
 
       if (res.ok) {
-        this.btnRevealFinder.innerHTML = '<span class="btn-icon">✓</span><span>Finder\'da Açıldı</span>';
+        this.revealInFinderBtn.innerHTML = `
+          <svg class="ui-icon-sm text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+          <span>Finder'da Açıldı</span>
+        `;
         setTimeout(() => {
-          this.btnRevealFinder.innerHTML = originalText;
+          this.revealInFinderBtn.innerHTML = originalHtml;
         }, 2000);
       } else {
         throw new Error('Finder açılamadı');
       }
     } catch (err) {
-      console.warn('Finder reveal hatası:', err);
-      this.btnRevealFinder.innerHTML = originalText;
+      this.revealInFinderBtn.innerHTML = originalHtml;
     }
   }
 
@@ -615,30 +666,25 @@ class KesitAlApp {
 
   _setInspectLoading(loading) {
     if (loading) {
-      this.inspectLoading.classList.remove('hidden');
-      this.btnInspect.disabled = true;
-      this.btnPaste.disabled = true;
+      this.inspectLoading?.classList.remove('hidden');
+      if (this.loadVideoBtn) this.loadVideoBtn.disabled = true;
+      if (this.pasteBtn) this.pasteBtn.disabled = true;
     } else {
-      this.inspectLoading.classList.add('hidden');
-      this.btnInspect.disabled = false;
-      this.btnPaste.disabled = false;
+      this.inspectLoading?.classList.add('hidden');
+      if (this.loadVideoBtn) this.loadVideoBtn.disabled = false;
+      if (this.pasteBtn) this.pasteBtn.disabled = false;
     }
   }
 
   _showInspectError(msg) {
-    this.inspectErrorMsg.textContent = msg;
-    this.inspectError.classList.remove('hidden');
+    if (this.errorMessage) this.errorMessage.textContent = msg;
+    this.errorBanner?.classList.remove('hidden');
   }
 
   _hideInspectError() {
-    this.inspectError.classList.add('hidden');
+    this.errorBanner?.classList.add('hidden');
   }
 
-  /**
-   * Tarayıcı sekmesi açık olduğu sürece her 25 saniyede bir backend'e heartbeat gönderir.
-   * Sekme kapatıldığında istekler durur ve backend 90s sonra otomatik kapanır.
-   * @private
-   */
   _startHeartbeat() {
     this.heartbeatTimer = setInterval(async () => {
       if (this.isServerShutdown) return;
@@ -647,15 +693,10 @@ class KesitAlApp {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
-      } catch (err) {
-        // Ağ veya sunucu kapalıysa sessizce devam et
-      }
+      } catch (err) {}
     }, 25000);
   }
 
-  /**
-   * Kullanıcı isteğiyle arka plan sunucusunu ve geçici önizleme dosyalarını kapatır.
-   */
   async handleServerShutdown() {
     if (this.isServerShutdown) return;
 
@@ -664,46 +705,41 @@ class KesitAlApp {
 
     this.isServerShutdown = true;
 
-    // Heartbeat sayacını durdur
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
     }
 
-    // Video oynatılıyorsa durdur
     if (this.player) {
       try { this.player.pause(); } catch (e) {}
     }
 
-    // UI'ı kapalı duruma getir
     if (this.serverStatusPill) {
-      this.serverStatusPill.className = 'status-pill status-shutdown';
+      this.serverStatusPill.className = 'status-indicator status-shutdown';
     }
-    if (this.serverStatusText) {
-      this.serverStatusText.textContent = 'Kapalı';
+    if (this.statusText) {
+      this.statusText.textContent = 'Kapalı';
     }
     if (this.shutdownServerBtn) {
       this.shutdownServerBtn.disabled = true;
+      this.shutdownServerBtn.style.opacity = '0.5';
     }
     if (this.shutdownBanner) {
       this.shutdownBanner.classList.remove('hidden');
       this.shutdownBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // Sunucuya kapatma sinyali gönder
     try {
       await fetch('/api/system/shutdown', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         keepalive: true
       });
-    } catch (err) {
-      console.warn('Sunucu kapatıldı (bağlantı sonlandı):', err);
-    }
+    } catch (err) {}
   }
 }
 
-// Sayfa yüklendiğinde başlat
+// Başlatma
 document.addEventListener('DOMContentLoaded', () => {
   window.__kesitAlApp = new KesitAlApp();
 });
